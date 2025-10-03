@@ -140,12 +140,14 @@ resource "aws_api_gateway_usage_plan" "main" {
   api_stages {
     api_id = aws_api_gateway_rest_api.rest_api.id
     stage  = aws_api_gateway_stage.stage.stage_name
-    
-    # Method-specific throttling
-    throttle {
-      path        = "/*/*"      # Apply to all paths and methods
-      rate_limit  = 100         # 100 requests per second steady rate
-      burst_limit = 200         # 200 requests burst capacity
+
+    dynamic "throttle" {
+      for_each = local.method_config
+      content {
+        path = "${throttle.value.path}/${throttle.value.method}"
+        rate_limit  = 100         # 100 requests per second steady rate
+        burst_limit = 200         # 200 requests burst capacity
+      }
     }
   }
 
@@ -164,4 +166,8 @@ resource "aws_api_gateway_usage_plan" "main" {
   tags = {
     Name = "${var.rest_api_name}-usage-plan"
   }
+  depends_on = [
+    aws_api_gateway_method.methods,
+    aws_api_gateway_integration.integrations
+  ]
 } 
