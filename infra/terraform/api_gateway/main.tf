@@ -230,8 +230,6 @@ resource "aws_api_gateway_deployment" "deployment" {
 
     aws_api_gateway_method_response.options_response,
     aws_api_gateway_integration_response.options_integration_response,
-
-    aws_api_gateway_base_path_mapping.custom_domain_mapping
   ]
   lifecycle {
     create_before_destroy = false
