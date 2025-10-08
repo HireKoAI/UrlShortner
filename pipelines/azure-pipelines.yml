@@ -50,26 +50,11 @@ stages:
           fi
           
           echo "################################### STEP 1: Setup AWS Credentials #################################################"
-          # Configure AWS credentials from pipeline variables
-          mkdir -p ~/.aws
-
-          # Write credentials
-          cat > ~/.aws/credentials <<EOL
-          [${PARAM_PROFILE_NAME}]
-          aws_access_key_id = ${AWS_ACCESS_KEY_ID}
-          aws_secret_access_key = ${AWS_SECRET_ACCESS_KEY}
-          ${AWS_SESSION_TOKEN:+aws_session_token = ${AWS_SESSION_TOKEN}}
-          EOL
-
-          # Write config
-          cat > ~/.aws/config <<EOL
-          [profile ${PARAM_PROFILE_NAME}]
-          region = ${BETA_AWS_REGION}
-          output = json
-          EOL
-
-          # Verify AWS credentials
-          aws sts get-caller-identity --profile "${PARAM_PROFILE_NAME}"
+          aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID" --profile "$PARAM_PROFILE_NAME"
+          aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY" --profile "$PARAM_PROFILE_NAME"
+          aws configure set region "$BETA_AWS_REGION_CONFIG_ENV" --profile "$PARAM_PROFILE_NAME"
+          aws configure set output "json" --profile "$PARAM_PROFILE_NAME"
+          aws sts get-caller-identity --profile "$PARAM_PROFILE_NAME" > /dev/null
 
           
           echo "################################### STEP 2: Deploy to Beta Environment #################################################"
