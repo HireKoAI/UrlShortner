@@ -61,6 +61,7 @@ module "apigateway" {
   rest_api_name = var.prefix
   config        = local.api_config
   stage_name    = var.environment
+  custom_domain_name = var.domain_name
   depends_on = [
     module.lambda_getOrCreateShortURL,
     module.lambda_redirectURL
