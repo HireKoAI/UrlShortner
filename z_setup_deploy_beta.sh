@@ -17,6 +17,10 @@ if ! aws sts get-caller-identity --profile "$PROFILE" &>/dev/null; then
     exit 1
 fi
 
+python3 -m venv venv
+source venv/bin/activate
+pip install -r src/requirements.txt
+
 # Run all unit tests in the test directory
 echo "Running all unit tests..."
 export PYTHONPATH=$PYTHONPATH:"./src":"./test"
