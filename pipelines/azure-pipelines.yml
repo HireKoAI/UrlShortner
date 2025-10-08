@@ -52,7 +52,7 @@ stages:
           echo "################################### STEP 1: Setup AWS Credentials #################################################"
           aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID" --profile "$PARAM_PROFILE_NAME"
           aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY" --profile "$PARAM_PROFILE_NAME"
-          aws configure set region "$BETA_AWS_REGION_CONFIG_ENV" --profile "$PARAM_PROFILE_NAME"
+          aws configure set region "$BETA_AWS_REGION" --profile "$PARAM_PROFILE_NAME"
           aws configure set output "json" --profile "$PARAM_PROFILE_NAME"
           aws sts get-caller-identity --profile "$PARAM_PROFILE_NAME" > /dev/null
 
