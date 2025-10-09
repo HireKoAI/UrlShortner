@@ -122,9 +122,6 @@ resource "aws_api_gateway_stage" "stage" {
     Name = "${var.rest_api_name}-${var.stage_name}"
   }
 
-  lifecycle {
-    replace_triggered_by = [aws_api_gateway_deployment.deployment]
-  }
 }
 
 # Usage Plan for rate limiting
