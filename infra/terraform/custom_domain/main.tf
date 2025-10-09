@@ -20,10 +20,6 @@ resource "aws_api_gateway_base_path_mapping" "custom_domain_mapping" {
   api_id      = var.api_gateway_id
   stage_name  = var.api_gateway_stage_name
   domain_name = aws_api_gateway_domain_name.custom_domain.domain_name
-  
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 # Route53 record pointing directly to API Gateway custom domain
