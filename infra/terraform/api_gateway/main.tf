@@ -25,6 +25,10 @@ resource "aws_api_gateway_rest_api" "rest_api" {
   endpoint_configuration {
     types = ["REGIONAL"]
   }
+  
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 # Get the created resources using data sources (like working reference)
