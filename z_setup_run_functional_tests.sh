@@ -24,15 +24,19 @@ export PYTHONBREAKPOINT="pdb.set_trace"
 export PYTHONPATH="${PWD}/src:${PWD}/test:./src:./test"
 
 # Run all unit tests in the test directory
-echo "Running all unit tests..."
-set +e  # Temporarily disable exit on error
-python3 -m unittest discover -s test -p "test_*.py" -v
-TEST_EXIT_CODE=$?
-set -e  # Re-enable exit on error
+echo "Running all unit tests with verbose output..."
+echo "=========================================="
 
-# Check if tests passed
-if [ $TEST_EXIT_CODE -eq 0 ]; then
+# Run tests with verbose output and capture both stdout and stderr
+if python3 -m unittest discover -s test -p "test_*.py" -v 2>&1; then
+    echo "=========================================="
     echo "✅ All tests passed successfully!"
 else
-    echo "⚠️  Some tests failed but continuing with build..."
+    echo "=========================================="
+    echo "❌ TESTS FAILED - Build will not continue"
+    echo "=========================================="
+    echo "Test execution failed with exit code: $?"
+    echo "Check the output above for detailed error information."
+    echo "=========================================="
+    exit 1
 fi 
