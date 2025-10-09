@@ -139,13 +139,6 @@ resource "aws_api_gateway_usage_plan" "main" {
   api_stages {
     api_id = aws_api_gateway_rest_api.rest_api.id
     stage  = aws_api_gateway_stage.stage.stage_name
-    
-    # Method-specific throttling
-    throttle {
-      path        = "/*/*"      # Apply to all paths and methods
-      rate_limit  = 100         # 100 requests per second steady rate
-      burst_limit = 200         # 200 requests burst capacity
-    }
   }
 
   # Overall quota limits
@@ -154,7 +147,7 @@ resource "aws_api_gateway_usage_plan" "main" {
     period = "DAY"
   }
 
-  # Default throttling for the entire usage plan
+  # Default throttling for the entire usage plan (applies to all methods)
   throttle_settings {
     rate_limit  = 100    # 100 RPS steady rate
     burst_limit = 200    # 200 burst capacity
