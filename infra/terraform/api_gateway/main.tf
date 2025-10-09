@@ -115,10 +115,6 @@ resource "aws_api_gateway_deployment" "deployment" {
     aws_api_gateway_method.methods,
     aws_api_gateway_integration.integrations,
   ]
-
-  lifecycle {
-    create_before_destroy = true
-  }
 }
 
 # API Gateway Stage
