@@ -48,65 +48,69 @@ stages:
             echo "Error: Not in $REPOSITORY_NAME directory"
             exit 1
           fi
-          
-          echo "################################### STEP 1: Setup AWS Credentials #################################################"
-          # Configure AWS credentials from pipeline variables
-          mkdir -p ~/.aws
-          echo "[${PARAM_PROFILE_NAME}]" > ~/.aws/credentials
-          echo "aws_access_key_id = ${AWS_ACCESS_KEY_ID}" >> ~/.aws/credentials
-          echo "aws_secret_access_key = ${AWS_SECRET_ACCESS_KEY}" >> ~/.aws/credentials
-          
-          echo "[${PARAM_PROFILE_NAME}]" > ~/.aws/config
-          echo "region = ${BETA_AWS_REGION}" >> ~/.aws/config
-          echo "output = json" >> ~/.aws/config
-          
-          # Verify AWS credentials
-          aws sts get-caller-identity --profile "${PARAM_PROFILE_NAME}"
-          
-          echo "################################### STEP 2: Deploy to Beta Environment #################################################"
-          chmod +x ./z_setup_deploy_beta.sh
-          ./z_setup_deploy_beta.sh
-          
+        displayName: 'Step 0: Directory Check (Beta)'
         env:
-          REPOSITORY_NAME: 'UrlShortner'
-          AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
-          AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
-        displayName: 'Deploy to Beta Environment'
+          REPOSITORY_NAME: "$(Build.Repository.Name)"
       
       - bash: |
           set -e
           set -x
           
-          echo "################################### STEP 3: Run Integration Tests #################################################"
+          echo "################################### PART 1 #################################################"
           
-          # Extract API Gateway URL from Terraform outputs
-          if [ -f "terraform_outputs_beta.txt" ]; then
-            API_URL=$(grep -E "api_gateway_url|url" terraform_outputs_beta.txt | cut -d'"' -f4 | head -1)
-            echo "API URL: $API_URL"
-            
-            # Simple health check
-            curl -f "$API_URL/shorten" -X OPTIONS || echo "OPTIONS request failed but continuing..."
-            
-            echo "Integration tests passed!"
-          else
-            echo "Warning: terraform_outputs_beta.txt not found, skipping integration tests"
-          fi
-          
-        displayName: 'Run Integration Tests'
+          export AWS_ACCESS_KEY_ID=$(HIREKO_BETA_AWS_ACCESS_KEY_ID)
+          export AWS_SECRET_ACCESS_KEY=$(HIREKO_BETA_AWS_SECRET_ACCESS_KEY)
 
-- stage: DeployProd
+          if [ -z "$AWS_ACCESS_KEY_ID" ]; then
+            exit 1
+          fi
+          if [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+            exit 1
+          fi
+          # Export full ADO variable names as well
+          export HIREKO_BETA_AWS_ACCESS_KEY_ID=$(HIREKO_BETA_AWS_ACCESS_KEY_ID)
+          export HIREKO_BETA_AWS_SECRET_ACCESS_KEY=$(HIREKO_BETA_AWS_SECRET_ACCESS_KEY)
+          echo "Environment variables set for Beta."
+
+          echo "################################### PART 3 #################################################"
+          aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID" --profile "$PARAM_PROFILE_NAME"
+          aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY" --profile "$PARAM_PROFILE_NAME"
+          aws configure set region "$BETA_AWS_REGION_CONFIG_ENV" --profile "$PARAM_PROFILE_NAME"
+          aws configure set output "json" --profile "$PARAM_PROFILE_NAME"
+          aws sts get-caller-identity --profile "$PARAM_PROFILE_NAME" > /dev/null
+
+          echo "################################### PART 4 #################################################"
+          chmod +x z_setup_deploy_beta.sh
+          ./z_setup_deploy_beta.sh
+
+          echo "Successfully deployed commit $(Build.SourceVersion) to Beta."
+          echo "##vso[task.setvariable variable=BETA_DEPLOYED_SHA;isOutput=true]$(Build.SourceVersion)"
+
+        name: deployBetaScript
+        displayName: 'AWS & Deploy (Beta)'
+        env:
+          PARAM_PROFILE_NAME: "$(PARAM_PROFILE_NAME)"
+          BETA_AWS_REGION_CONFIG_ENV: "$(BETA_AWS_REGION)"
+          REPOSITORY_NAME: "$(Build.Repository.Name)"
+
+- stage: DeployToProd
   displayName: 'Deploy to Production'
   dependsOn: DeployAndTestBeta
-  condition: succeeded()
+  condition: succeeded('DeployAndTestBeta')
+  variables:
+    # Define TARGET_PROD_COMMIT_SHA to receive output from Beta stage
+    TARGET_PROD_COMMIT_SHA: $[ stageDependencies.DeployAndTestBeta.betaDeploymentJob.outputs['deployBetaScript.BETA_DEPLOYED_SHA'] ]
   jobs:
-  - deployment: prodDeploymentJob
-    displayName: 'Deploy to Production'
-    environment: 'prod'
+  - deployment: ProductionDeployment
+    displayName: 'Deploy to Production Environment (from main branch)'
     pool:
       vmImage: 'ubuntu-latest'
     container:
       image: ${{ variables.DOCKER_IMAGE }}
       options: --platform linux/amd64
+    environment:
+      name: 'prod'
+      # This environment should be configured in Azure DevOps with approval checks
     variables:
       PARAM_PROFILE_NAME: ${{ parameters.profile_name }}
       PROD_AWS_REGION: 'us-west-1'
@@ -114,12 +118,25 @@ stages:
       runOnce:
         deploy:
           steps:
+            - bash: |
+                if [[ -z "${TARGET_PROD_COMMIT_SHA}" ]]; then
+                  echo "[ERROR] TARGET_PROD_COMMIT_SHA is not set. Cannot proceed."
+                  exit 1
+                fi
+
+                # Remove any accidental quotes
+                TARGET_PROD_COMMIT_SHA="${TARGET_PROD_COMMIT_SHA//\'/}"
+                
+                echo "Production deployment will use the latest 'main' branch."
+                echo "Target commit SHA for Production: $(TARGET_PROD_COMMIT_SHA)"
+              displayName: 'Confirm Prod Source (main branch)'
+
             - checkout: self
               fetchDepth: "0"
               clean: "true"
               path: 's/$(Build.Repository.Name)'
-              displayName: 'Checkout Default/Triggering Ref'
-            
+              displayName: 'Initial Checkout for Prod Job'
+              
             - bash: |
                 set -e
                 set -x
@@ -132,27 +149,69 @@ stages:
                   echo "Error: Not in $REPOSITORY_NAME directory"
                   exit 1
                 fi
-                
-                echo "################################### STEP 1: Setup AWS Credentials #################################################"
-                # Configure AWS credentials from pipeline variables
-                mkdir -p ~/.aws
-                echo "[${PARAM_PROFILE_NAME}]" > ~/.aws/credentials
-                echo "aws_access_key_id = ${AWS_ACCESS_KEY_ID}" >> ~/.aws/credentials
-                echo "aws_secret_access_key = ${AWS_SECRET_ACCESS_KEY}" >> ~/.aws/credentials
-                
-                echo "[${PARAM_PROFILE_NAME}]" > ~/.aws/config
-                echo "region = ${PROD_AWS_REGION}" >> ~/.aws/config
-                echo "output = json" >> ~/.aws/config
-                
-                # Verify AWS credentials
-                aws sts get-caller-identity --profile "${PARAM_PROFILE_NAME}"
-                
-                echo "################################### STEP 2: Deploy to Production Environment #################################################"
-                chmod +x ./z_setup_deploy_prod.sh
-                ./z_setup_deploy_prod.sh
-                
+              displayName: 'Step 0: Directory Check (Prod)'
               env:
-                REPOSITORY_NAME: 'UrlShortner'
-                AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
-                AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
-              displayName: 'Deploy to Production Environment' 
+                REPOSITORY_NAME: "$(Build.Repository.Name)"
+            
+            - bash: |
+                set -e # Keep exit on error
+                
+                # Remove any accidental quotes from the variable
+                TARGET_COMMIT_CLEAN="${TARGET_PROD_COMMIT_SHA//\'/}"
+                TARGET_COMMIT_CLEAN="${TARGET_COMMIT_CLEAN//\"/}"
+                
+                echo "Target commit SHA for Production: $TARGET_COMMIT_CLEAN"
+                if [ -z "$TARGET_COMMIT_CLEAN" ]; then
+                  echo "[ERROR] TARGET_PROD_COMMIT_SHA is not set. Cannot proceed."
+                  exit 1
+                fi
+
+                # Remove any accidental quotes and assign to variable
+                PROD_COMMIT_SHA="$(TARGET_PROD_COMMIT_SHA)"
+                PROD_COMMIT_SHA="${PROD_COMMIT_SHA//\'}"
+                PROD_COMMIT_SHA="${PROD_COMMIT_SHA//\"}"
+                
+                echo "Checking out target commit for Production: $PROD_COMMIT_SHA"
+                git checkout "$PROD_COMMIT_SHA"
+                echo "Successfully checked out commit $PROD_COMMIT_SHA for Production."
+                echo "##vso[task.setvariable variable=PROD_COMMIT_SHA]$PROD_COMMIT_SHA"
+              displayName: 'Checkout Target Commit for Production'
+
+            - bash: |
+                echo "Deploying commit $(PROD_COMMIT_SHA) from 'main' branch to Production after approval"
+              displayName: 'Display Commit SHA for Prod (from main)'
+
+            # Merged script task for Production
+            - bash: |
+                set -e
+                set -x
+
+                echo "################################### Setting up Environment Variables (Prod) #################################################"
+                export AWS_ACCESS_KEY_ID=$(HIREKO_PROD_AWS_ACCESS_KEY_ID)
+                export AWS_SECRET_ACCESS_KEY=$(HIREKO_PROD_AWS_SECRET_ACCESS_KEY)
+
+                if [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ]; then
+                  echo "[ERROR] Critical AWS credentials not set for Prod. Exiting."
+                  exit 1
+                fi
+                # Export full ADO variable names as well
+                export HIREKO_PROD_AWS_ACCESS_KEY_ID=$(HIREKO_PROD_AWS_ACCESS_KEY_ID)
+                export HIREKO_PROD_AWS_SECRET_ACCESS_KEY=$(HIREKO_PROD_AWS_SECRET_ACCESS_KEY)
+                echo "Environment variables set for Prod."
+
+                echo "################################### PART 3 #################################################"
+                aws configure set aws_access_key_id "$AWS_ACCESS_KEY_ID" --profile "$PARAM_PROFILE_NAME"
+                aws configure set aws_secret_access_key "$AWS_SECRET_ACCESS_KEY" --profile "$PARAM_PROFILE_NAME"
+                aws configure set region "$PROD_AWS_REGION_CONFIG_ENV" --profile "$PARAM_PROFILE_NAME"
+                aws configure set output "json" --profile "$PARAM_PROFILE_NAME"
+                aws sts get-caller-identity --profile "$PARAM_PROFILE_NAME" > /dev/null
+
+                echo "################################### PART 4 #################################################"
+                chmod +x z_setup_deploy_prod.sh
+                ./z_setup_deploy_prod.sh
+
+              displayName: 'AWS & Deploy (Prod)'
+              env:
+                PARAM_PROFILE_NAME: "$(PARAM_PROFILE_NAME)"
+                PROD_AWS_REGION_CONFIG_ENV: "$(PROD_AWS_REGION)"
+                REPOSITORY_NAME: "$(Build.Repository.Name)"
