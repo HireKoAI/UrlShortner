@@ -100,7 +100,6 @@ resource "aws_lambda_permission" "api_gateway_invoke" {
 # API Gateway Deployment
 resource "aws_api_gateway_deployment" "deployment" {
   rest_api_id = aws_api_gateway_rest_api.rest_api.id
-  variables   = { "timestamp" = timestamp() }
 
   triggers = {
     redeployment = sha1(jsonencode([
@@ -130,6 +129,10 @@ resource "aws_api_gateway_stage" "stage" {
 
   tags = {
     Name = "${var.rest_api_name}-${var.stage_name}"
+  }
+  
+  lifecycle {
+    create_before_destroy = true
   }
 }
 
@@ -164,4 +167,6 @@ resource "aws_api_gateway_usage_plan" "main" {
   tags = {
     Name = "${var.rest_api_name}-usage-plan"
   }
+  
+  depends_on = [aws_api_gateway_stage.stage]
 } 
