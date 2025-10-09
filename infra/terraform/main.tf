@@ -55,6 +55,25 @@ module "lambda_redirectURL" {
   depends_on            = [aws_dynamodb_table.URLMappings]
 }
 
+# Complete API Endpoint URLs (auto-detected from config)
+# MUST be defined BEFORE apigateway module
+locals {
+  api_config = [
+    {
+      "http_method"   = ["POST"],
+      "path"          = "/${var.project_name}/stage/{stage}/tenant/{tenant}/shorten",
+      "function_name" = module.lambda_getOrCreateShortURL.lambda_name
+      "description"   = "Create Short URL API"
+    },
+    {
+      "http_method"   = ["GET"],
+      "path"          = "/{shortId}",
+      "function_name" = module.lambda_redirectURL.lambda_name
+      "description"   = "Redirect URL API"
+    }
+  ]
+}
+
 # API Gateway configuration
 module "apigateway" {
   source        = "./api_gateway"
@@ -77,24 +96,6 @@ output "api_gateway_base_url" {
 output "api_gateway_id" {
   value       = module.apigateway.rest_api_id
   description = "ID of the API Gateway REST API"
-}
-
-# Complete API Endpoint URLs (auto-detected from config)
-locals {
-  api_config = [
-    {
-      "http_method"   = ["POST"],
-      "path"          = "/${var.project_name}/stage/{stage}/tenant/{tenant}/shorten",
-      "function_name" = module.lambda_getOrCreateShortURL.lambda_name
-      "description"   = "Create Short URL API"
-    },
-    {
-      "http_method"   = ["GET"],
-      "path"          = "/{shortId}",
-      "function_name" = module.lambda_redirectURL.lambda_name
-      "description"   = "Redirect URL API"
-    }
-  ]
 }
 
 output "api_endpoints" {

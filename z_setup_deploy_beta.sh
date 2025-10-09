@@ -27,7 +27,12 @@ export AWS_REGION=$REGION
 echo "Running all unit tests..."
 export PYTHONPATH=$PYTHONPATH:"./src":"./test"
 
-python3 -m unittest discover -s test -p "test_*.py" -v
+# Run all unit tests in the test directory
+echo "Running all unit tests..."
+export PYTHONPATH=$PYTHONPATH:"./src":"./test"
+
+#python3 -m unittest discover -s test -p "test_*.py" -v
+source z_setup_run_functional_tests.sh
 
 export TF_LOG=DEBUG
 export TF_LOG_PATH=terraform-debug.log
