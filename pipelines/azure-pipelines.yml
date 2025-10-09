@@ -101,7 +101,7 @@ stages:
   jobs:
   - deployment: prodDeploymentJob
     displayName: 'Deploy to Production'
-    environment: 'Production'
+    environment: 'prod'
     pool:
       vmImage: 'ubuntu-latest'
     container:
