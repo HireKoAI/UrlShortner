@@ -52,6 +52,7 @@ class TestLambdaUtils(unittest.TestCase):
     def test_get_base_url_fallback(self):
         """Test base URL construction with missing data"""
         event = {}
+        del os.environ["BASE_URL"]
         base_url = get_base_url(event)
         self.assertEqual(base_url, 'https://unknown-host/unknown-stage')
     
