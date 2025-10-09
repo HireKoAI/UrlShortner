@@ -1,14 +1,8 @@
-# Data source to get the IAM role for Lambda
-data "aws_iam_role" "lambda_role" {
-  count = var.role_arn == "" ? 1 : 0
-  name  = "${split("-", var.lambda_name)[0]}-${split("-", var.lambda_name)[1]}-lambda-dynamodb-role"
-}
-
 # Lambda function
 resource "aws_lambda_function" "lambda_function" {
   filename         = var.file_path
   function_name    = var.lambda_name
-  role            = var.role_arn != "" ? var.role_arn : data.aws_iam_role.lambda_role[0].arn
+  role            =  var.role_arn
   handler         = var.handler
   runtime         = var.runtime
   timeout         = var.timeout
