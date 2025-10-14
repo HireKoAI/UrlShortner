@@ -1,0 +1,76 @@
+{
+	"info": {
+		"_postman_id": "50d560dc-cf7d-47cd-bade-e39ccbbcef77",
+		"name": "UrlShortner",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "48156628",
+		"_collection_link": "https://naveen-santosh333-5818259.postman.co/workspace/4f62d1d9-948f-4c19-822d-d2f6a318668e/collection/48156628-50d560dc-cf7d-47cd-bade-e39ccbbcef77?action=share&source=collection_link&creator=48156628"
+	},
+	"item": [
+		{
+			"name": "getOrCreateShortURL",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		},
+		{
+			"name": "redirectURL",
+			"request": {
+				"method": "GET",
+				"header": []
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "oauth2",
+		"oauth2": [
+			{
+				"key": "client_authentication",
+				"value": "body",
+				"type": "string"
+			},
+			{
+				"key": "clientId",
+				"value": "1b8ta2b3bekd1ra2foskv6ufan",
+				"type": "string"
+			},
+			{
+				"key": "authUrl",
+				"value": "https://beta-test-hirekoai.auth.us-east-1.amazoncognito.com/oauth2/authorize",
+				"type": "string"
+			},
+			{
+				"key": "addTokenTo",
+				"value": "header",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
