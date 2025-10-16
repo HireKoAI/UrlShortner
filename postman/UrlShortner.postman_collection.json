@@ -10,8 +10,53 @@
 		{
 			"name": "getOrCreateShortURL",
 			"request": {
-				"method": "GET",
-				"header": []
+				"method": "POST",
+				"header": [
+					{
+						"key": "AuthorizationTenant",
+						"value": "test",
+						"type": "text"
+					},
+					{
+						"key": "AuthorizationRegion",
+						"value": "us-east-1",
+						"type": "text"
+					},
+					{
+						"key": "user_alias",
+						"value": "test_user_alias_123",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"longUrl\": \"https://example.com\", \r\n    \"customSuffix\": \"test\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://d8boc6ic4f.execute-api.us-west-2.amazonaws.com/beta/UrlShortner/stage/beta/tenant/test/shorten",
+					"protocol": "https",
+					"host": [
+						"d8boc6ic4f",
+						"execute-api",
+						"us-west-2",
+						"amazonaws",
+						"com"
+					],
+					"path": [
+						"beta",
+						"UrlShortner",
+						"stage",
+						"beta",
+						"tenant",
+						"test",
+						"shorten"
+					]
+				}
 			},
 			"response": []
 		},
@@ -19,7 +64,30 @@
 			"name": "redirectURL",
 			"request": {
 				"method": "GET",
-				"header": []
+				"header": [
+					{
+						"key": "AuthorizationTenant",
+						"value": "test",
+						"type": "text"
+					},
+					{
+						"key": "AuthorizationRegion",
+						"value": "us-east-1",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://shortbeta.hireko.ai/test",
+					"protocol": "https",
+					"host": [
+						"shortbeta",
+						"hireko",
+						"ai"
+					],
+					"path": [
+						"test"
+					]
+				}
 			},
 			"response": []
 		}
