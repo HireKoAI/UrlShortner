@@ -20,7 +20,7 @@ from commons.dynamodb_utils import (
 # Initialize powertools
 logger = Logger()
 tracer = Tracer()
-metrics = Metrics()
+metrics = Metrics(namespace="UrlShortenerService")
 
 # Constants
 DEFAULT_EXPIRY_DAYS = 60

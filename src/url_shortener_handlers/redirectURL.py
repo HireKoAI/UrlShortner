@@ -15,7 +15,7 @@ from commons.dynamodb_utils import get_url_by_short_id, update_click_count, Data
 # Initialize powertools
 logger = Logger()
 tracer = Tracer()
-metrics = Metrics()
+metrics = Metrics(namespace="UrlShortenerService")
 
 
 @tracer.capture_lambda_handler
