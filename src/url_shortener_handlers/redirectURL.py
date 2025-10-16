@@ -32,6 +32,7 @@ def lambda_handler(event, context):
     - 302 redirect to the original URL
     - 404 JSON if short URL not found or expired
     """
+    print(event)
     
     try:
         # Extract short ID from path parameters

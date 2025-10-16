@@ -67,7 +67,7 @@ locals {
     },
     {
       "http_method"   = ["GET"],
-      "path"          = "/{shortId}",
+      "path"          = "/{shortId+}",
       "function_name" = module.lambda_redirectURL.lambda_name
       "description"   = "Redirect URL API"
     }
