@@ -16,7 +16,9 @@ from commons.dynamodb_utils import (
     find_existing_url, create_url_mapping, get_url_by_short_id,
     DatabaseError
 )
-
+from multi_tenant_auth.api import (
+    is_valid_machine_or_user_auth_v2
+)
 # Initialize powertools
 logger = Logger()
 tracer = Tracer()
@@ -25,6 +27,9 @@ metrics = Metrics(namespace="UrlShortenerService")
 # Constants
 DEFAULT_EXPIRY_DAYS = 60
 MAX_COLLISION_RETRIES = 3
+SERVICE_NAME = "UrlShortenerService"
+UNAUTHORIZED = "Unauthorized access"
+HTTP_UNAUTHORIZED = 401
 
 
 @tracer.capture_lambda_handler
@@ -54,6 +59,27 @@ def lambda_handler(event, context):
         short_id, stage, tenant = extract_path_parameters(event)
         if stage and tenant:
             logger.info(f"Request from stage: {stage}, tenant: {tenant}")
+
+        # Extract headers from the event
+        headers = event.get('headers', {})
+        
+        
+        # Validate user authentication
+        if not is_valid_machine_or_user_auth_v2(
+            headers=headers, 
+            tenant=tenant, 
+            stage=stage, 
+            current_service_name=SERVICE_NAME
+        ):
+            logger.info(f"UnauthorizedAccess")
+            metrics.add_metric(name="UnauthorizedAccess", unit=MetricUnit.Count, value=1)
+            return create_error_response(
+            status_code=HTTP_UNAUTHORIZED,
+            error_message=UNAUTHORIZED,
+            logger=logger,
+            metrics=metrics,
+            metric_name="UnauthorizedAccess"
+        )
         
         # Parse and validate request body
         body = parse_request_body(event)
