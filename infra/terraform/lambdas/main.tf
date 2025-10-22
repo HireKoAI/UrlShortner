@@ -29,11 +29,6 @@ resource "aws_lambda_function" "lambda_function" {
   ]
 }
 
-resource "aws_iam_role_policy_attachment" "attach_dynamodb_admin_policy" {
-  role       = var.role_arn != "" ? var.role_arn : data.aws_iam_role.lambda_role[0].name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess"
-}
-
 # CloudWatch log group for Lambda function
 resource "aws_cloudwatch_log_group" "lambda_log_group" {
   name              = "/aws/lambda/${var.lambda_name}"
