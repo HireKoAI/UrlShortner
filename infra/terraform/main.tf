@@ -38,7 +38,7 @@ module "lambda_getOrCreateShortURL" {
   aws_profile           = var.aws_profile
   aws_region            = var.aws_region
   role_arn              = aws_iam_role.lambda_dynamodb_role.arn
-  depends_on            = [aws_dynamodb_table.URLMappings]
+  depends_on            = [aws_dynamodb_table.URLMappings, aws_iam_role_policy_attachment.dynamodb_full_access]
 }
 
 # Lambda function for URL redirection
