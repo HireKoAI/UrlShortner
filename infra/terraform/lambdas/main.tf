@@ -49,6 +49,12 @@ resource "aws_lambda_function" "lambda_function" {
   ]
 }
 
+resource "aws_iam_role" "lambda_role" {
+  assume_role_policy = data.aws_iam_policy_document.role_doc.json
+  name = "${substr(var.lambda_name, 0, 50)}_role"
+  
+}
+
 # the list of permissions that are attached to the lambda role and gives lambda full access to the services it needs
 resource "aws_iam_role_policy_attachment" "admin_policy" {
   for_each   = toset(local.admin_policies)
