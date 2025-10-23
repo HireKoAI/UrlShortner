@@ -4,7 +4,7 @@
 		"name": "UrlShortner",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "48156628",
-		"_collection_link": "https://naveen-santosh333-5818259.postman.co/workspace/4f62d1d9-948f-4c19-822d-d2f6a318668e/collection/48156628-50d560dc-cf7d-47cd-bade-e39ccbbcef77?action=share&source=collection_link&creator=48156628"
+		"_collection_link": "https://naveen-santosh333-5818259.postman.co/workspace/naveensai-kumar's-Workspace~4f62d1d9-948f-4c19-822d-d2f6a318668e/collection/48156628-50d560dc-cf7d-47cd-bade-e39ccbbcef77?action=share&source=collection_link&creator=48156628"
 	},
 	"item": [
 		{
@@ -25,12 +25,13 @@
 					{
 						"key": "user_alias",
 						"value": "test_user_alias_123",
-						"type": "text"
+						"type": "text",
+						"disabled": true
 					}
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"longUrl\": \"https://example.com\", \r\n    \"customSuffix\": \"test\"\r\n}",
+					"raw": "{\r\n    \"longUrl\": \"https://google.com\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -96,6 +97,26 @@
 		"type": "oauth2",
 		"oauth2": [
 			{
+				"key": "redirect_uri",
+				"value": "https://test.beta.hireko.ai/",
+				"type": "string"
+			},
+			{
+				"key": "addTokenTo",
+				"value": "header",
+				"type": "string"
+			},
+			{
+				"key": "grant_type",
+				"value": "authorization_code",
+				"type": "string"
+			},
+			{
+				"key": "accessTokenUrl",
+				"value": "https://beta-test-hirekoai.auth.us-east-1.amazoncognito.com/oauth2/token",
+				"type": "string"
+			},
+			{
 				"key": "client_authentication",
 				"value": "body",
 				"type": "string"
@@ -108,11 +129,6 @@
 			{
 				"key": "authUrl",
 				"value": "https://beta-test-hirekoai.auth.us-east-1.amazoncognito.com/oauth2/authorize",
-				"type": "string"
-			},
-			{
-				"key": "addTokenTo",
-				"value": "header",
 				"type": "string"
 			}
 		]
