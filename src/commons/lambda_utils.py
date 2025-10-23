@@ -73,8 +73,8 @@ def extract_path_parameters(event: Dict[str, Any]) -> Tuple[Optional[str], Optio
     """
     path_params = event.get('pathParameters', {})
     short_id = path_params.get('shortId')
-    stage = None
-    tenant = None
+    stage = path_params.get('stage')
+    tenant = path_params.get('tenant')
     
     # If using proxy integration, extract from proxy path
     if 'proxy' in path_params:
